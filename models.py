@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, Boolean
 from database import Base  # Importar Base desde database.py
 
+# Creamos la primera clase como prueba
 class Usuario(Base):
     __tablename__ = "usuarios"
 
