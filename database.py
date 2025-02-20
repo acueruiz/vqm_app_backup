@@ -1,33 +1,12 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
-import os
-from dotenv import load_dotenv
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 
-# Cargar variables de entorno desde .env
-load_dotenv()
+db = SQLAlchemy()
+Base = db.Model  # Definir Base aquí
 
-# Obtener la URL de la base de datos
-DATABASE_URL = os.getenv("DATABASE_URL")
+def init_db(app):
+    db.init_app(app)
+    migrate = Migrate(app, db)
 
-# Crear conexión a la base de datos
-engine = create_engine(DATABASE_URL, echo=True)
-SessionLocal = sessionmaker(bind=engine)
-
-# Base para los modelos
-Base = declarative_base()
-
-# 📌 Importar modelos después de definir Base
-import models  # Ahora sí lo usaremos correctamente
-
-# Función para inicializar la base de datos
-def init_db():
-    print("📌 Tablas detectadas en SQLAlchemy antes de create_all():", models.Base.metadata.tables.keys())  # 🔍 Depuración
-    print("📌 Eliminando y recreando tablas...")
-    models.Base.metadata.drop_all(engine)  # Elimina todas las tablas
-    models.Base.metadata.create_all(engine)  # Vuelve a crearlas
-    print("✅ Tablas recreadas correctamente.")
-
-# Ejecutar la función si el script se ejecuta directamente
-if __name__ == "__main__":
-    init_db()
-    print("📌 Base de datos creada correctamente.")
+    with app.app_context():
+        db.create_all()
