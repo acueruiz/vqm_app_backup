@@ -8,6 +8,14 @@ api_blueprint = Blueprint('api', __name__)
 def ping():
     return jsonify({"message": "API funcionando correctamente"}), 200
 
+@api_blueprint.route('/')
+def home():
+    return "Bienvenido a la API"
+
+@api_blueprint.route('/api/data')
+def get_data():
+    return {"message": "Datos de la API"}
+
 # obtener datos de VQM Temperatura
 @api_blueprint.route('/vqm/temperatura', methods=['GET'])
 def get_vqm_temperatura():
