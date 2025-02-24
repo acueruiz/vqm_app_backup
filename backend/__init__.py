@@ -1,6 +1,6 @@
 from flask import Flask
-from backend.database import init_db
-from backend.routes import api_blueprint
+from database import init_db
+from routes import api_blueprint
 
 def create_app():
     app = Flask(__name__)

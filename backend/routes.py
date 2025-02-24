@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from backend.models import db, VqmTemperatura, VqmMdm
+from models import db, VqmTemperatura, VqmMdm
 
 api_blueprint = Blueprint('api', __name__)
 
