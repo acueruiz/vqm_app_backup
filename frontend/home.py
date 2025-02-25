@@ -8,7 +8,7 @@ import plotly.express as px
 API_URL = "http://127.0.0.1:5000/vqm"
 
 # Configuración de la página
-st.set_page_config(page_title="Aplicación VQM - MDM", layout="wide")
+st.set_page_config(page_title="Aplicación VQM", layout="wide")
 
 # 🎨 Estilos CSS personalizados
 st.markdown(
@@ -130,7 +130,7 @@ with col1:
         st.success("📨 Reporte enviado correctamente.")
 
 with col2:
-    if st.button("🔄 Actualizar Datos"):
+    if st.button("Actualizar Datos"):
         st.experimental_rerun()
 
 # 🏁 **Pie de página**
