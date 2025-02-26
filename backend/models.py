@@ -1,11 +1,20 @@
 from sqlalchemy import Column, Integer, String, Boolean, Float, Date, ForeignKey
 from sqlalchemy.orm import relationship
-from backend.database import db  # Importar Base desde database.py
+from .database import db  # Importar la base de datos
 
-class Usuario(db.Model):
+# clase Base para evitar repetir `id`
+class BaseModel(db.Model):
+    __abstract__ = True  # No se crea tabla para esta clase
+    id = Column(Integer, primary_key=True, autoincrement=True)
+
+    def to_dict(self):
+        """Convierte cualquier modelo a diccionario automáticamente."""
+        return {column.name: getattr(self, column.name) for column in self.__table__.columns}
+
+# modelo de Usuario
+class Usuario(BaseModel):
     __tablename__ = "usuarios"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
     email = Column(String, unique=True, nullable=False)
     nombre = Column(String, nullable=False)
     admin = Column(Boolean, default=False)
@@ -13,38 +22,20 @@ class Usuario(db.Model):
     correos = relationship("CorreoUsuario", back_populates="usuario", cascade="all, delete")
     permisos = relationship("PermisoUsuario", back_populates="usuario", cascade="all, delete")
 
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "email": self.email,
-            "nombre": self.nombre,
-            "admin": self.admin
-        }
-
-
-class CorreoUsuario(db.Model):
+# modelo de Correos de Usuarios
+class CorreoUsuario(BaseModel):
     __tablename__ = "correos_usuarios"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
     usuario_id = Column(Integer, ForeignKey("usuarios.id", ondelete="CASCADE"))
     tipo_notificacion = Column(String, nullable=False)
     activo = Column(Boolean, default=True)
 
     usuario = relationship("Usuario", back_populates="correos")
 
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "usuario_id": self.usuario_id,
-            "tipo_notificacion": self.tipo_notificacion,
-            "activo": self.activo
-        }
-
-
-class PermisoUsuario(db.Model):
+# modelo de Permisos de Usuarios
+class PermisoUsuario(BaseModel):
     __tablename__ = "permisos_usuarios"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
     usuario_id = Column(Integer, ForeignKey("usuarios.id", ondelete="CASCADE"))
     grupo = Column(String, nullable=False)
     permiso_edicion = Column(Boolean, default=False)
@@ -52,20 +43,10 @@ class PermisoUsuario(db.Model):
 
     usuario = relationship("Usuario", back_populates="permisos")
 
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "usuario_id": self.usuario_id,
-            "grupo": self.grupo,
-            "permiso_edicion": self.permiso_edicion,
-            "permiso_desbloqueo": self.permiso_desbloqueo
-        }
-
-
-class VqmTemperatura(db.Model):
+# moodelo de VQM Temperatura
+class VqmTemperatura(BaseModel):
     __tablename__ = "vqm_temperatura"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
     maquina = Column(String, nullable=False)
     apelacion = Column(String)
     receta = Column(String)
@@ -75,22 +56,14 @@ class VqmTemperatura(db.Model):
     operario = Column(String)
 
     def to_dict(self):
-        return {
-            "id": self.id,
-            "maquina": self.maquina,
-            "apelacion": self.apelacion,
-            "receta": self.receta,
-            "temperatura_caida": self.temperatura_caida,
-            "media_calificacion": self.media_calificacion,
-            "fecha_calificacion": self.fecha_calificacion.strftime('%Y-%m-%d') if self.fecha_calificacion else None,
-            "operario": self.operario
-        }
+        data = super().to_dict()
+        data["fecha_calificacion"] = self.fecha_calificacion.strftime('%Y-%m-%d') if self.fecha_calificacion else None
+        return data
 
-
-class TratamientoNCVqm(db.Model):
+# modelo de Tratamiento NC (No Conformidad) en VQM
+class TratamientoNCVqm(BaseModel):
     __tablename__ = "tratamiento_nc_vqm"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
     titulo = Column(String)
     fecha = Column(Date)
     trimestre_anio = Column(String)
@@ -107,29 +80,15 @@ class TratamientoNCVqm(db.Model):
     fecha_acciones = Column(Date)
 
     def to_dict(self):
-        return {
-            "id": self.id,
-            "titulo": self.titulo,
-            "fecha": self.fecha.strftime('%Y-%m-%d') if self.fecha else None,
-            "trimestre_anio": self.trimestre_anio,
-            "instrumento_medida": self.instrumento_medida,
-            "maquina": self.maquina,
-            "operario": self.operario,
-            "vqm_conforme": self.vqm_conforme,
-            "descripcion_intervencion": self.descripcion_intervencion,
-            "resultado_intervencion": self.resultado_intervencion,
-            "efectos_proceso": self.efectos_proceso,
-            "efectos_producto": self.efectos_producto,
-            "acciones_nc": self.acciones_nc,
-            "nc_validada": self.nc_validada,
-            "fecha_acciones": self.fecha_acciones.strftime('%Y-%m-%d') if self.fecha_acciones else None
-        }
+        data = super().to_dict()
+        data["fecha"] = self.fecha.strftime('%Y-%m-%d') if self.fecha else None
+        data["fecha_acciones"] = self.fecha_acciones.strftime('%Y-%m-%d') if self.fecha_acciones else None
+        return data
 
-
-class DatosMdms(db.Model):
+# modelo de Datos MDMS
+class DatosMdms(BaseModel):
     __tablename__ = "datos_mdms"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
     masico = Column(String)
     kw = Column(Float)
     id_dosificador = Column(String)
@@ -140,27 +99,15 @@ class DatosMdms(db.Model):
     circuito = Column(String)
     bascula = Column(String)
     id_bascula = Column(String)
+    id_masas_patron = Column(String)
+    vr_masas_patron = Column(Float)
+    tolerancia_vr = Column(Float)
+    tolerancia_cero = Column(Float)
 
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "masico": self.masico,
-            "kw": self.kw,
-            "id_dosificador": self.id_dosificador,
-            "valor_test1": self.valor_test1,
-            "tolerancia1": self.tolerancia1,
-            "valor_test2": self.valor_test2,
-            "tolerancia2": self.tolerancia2,
-            "circuito": self.circuito,
-            "bascula": self.bascula,
-            "id_bascula": self.id_bascula
-        }
-
-
-class VqmMdm(db.Model):
+# modelo de VQM MDM
+class VqmMdm(BaseModel):
     __tablename__ = "vqm_mdm"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
     titulo = Column(String)
     fecha = Column(Date)
     operador = Column(String)
@@ -170,25 +117,24 @@ class VqmMdm(db.Model):
     error_cantidad1 = Column(Float)
     error_cantidad2 = Column(Float)
     vqm_masico_conforme = Column(Boolean)
+    cant1_verif1_valor_masico = Column(Float)
+    cant1_verif1_valor_bascula = Column(Float)
+    cant1_verif2_valor_masico = Column(Float)
+    cant1_verif2_valor_bascula = Column(Float)
+    cant2_verif1_valor_masico = Column(Float)
+    cant2_verif1_valor_bascula = Column(Float)
+    cant2_verif2_valor_masico = Column(Float)
+    cant2_verif2_valor_bascula = Column(Float)
 
     def to_dict(self):
-        return {
-            "id": self.id,
-            "titulo": self.titulo,
-            "fecha": self.fecha.strftime('%Y-%m-%d') if self.fecha else None,
-            "operador": self.operador,
-            "valor_bascula": self.valor_bascula,
-            "valor_cero_bascula": self.valor_cero_bascula,
-            "vqm_bascula_conforme": self.vqm_bascula_conforme,
-            "error_cantidad1": self.error_cantidad1,
-            "error_cantidad2": self.error_cantidad2,
-            "vqm_masico_conforme": self.vqm_masico_conforme
-        }
-    
-class VqmTemperaturaMI10(db.Model):
+        data = super().to_dict()
+        data["fecha"] = self.fecha.strftime('%Y-%m-%d') if self.fecha else None
+        return data
+
+# modelo de VQM Temperatura MI10
+class VqmTemperaturaMI10(BaseModel):
     __tablename__ = "vqm_temperatura_mi10"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
     titulo = Column(String)
     fecha = Column(Date)
     num_ml_dia = Column(Integer)
@@ -205,20 +151,6 @@ class VqmTemperaturaMI10(db.Model):
     operario = Column(String)
 
     def to_dict(self):
-        return {
-            "id": self.id,
-            "titulo": self.titulo,
-            "fecha": self.fecha.strftime('%Y-%m-%d') if self.fecha else None,
-            "num_ml_dia": self.num_ml_dia,
-            "temperatura_mi": self.temperatura_mi,
-            "temperatura_pistola": self.temperatura_pistola,
-            "diferencia_temperaturas": self.diferencia_temperaturas,
-            "trimestre_anio": self.trimestre_anio,
-            "desviacion_tmi": self.desviacion_tmi,
-            "desviacion_tmi_tr": self.desviacion_tmi_tr,
-            "media_tmi_tr": self.media_tmi_tr,
-            "lsx": self.lsx,
-            "lix": self.lix,
-            "vqm_conforme": self.vqm_conforme,
-            "operario": self.operario
-        }
+        data = super().to_dict()
+        data["fecha"] = self.fecha.strftime('%Y-%m-%d') if self.fecha else None
+        return data
