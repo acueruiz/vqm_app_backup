@@ -1,1 +1,14 @@
+# Archivos de configuración y dependencias locales
 .env
+*.pyc
+__pycache__/
+
+# Entorno virtual de Python
+venv/
+*.venv/
+
+# Caché y archivos temporales
+*.log
+*.sqlite3
+.DS_Store  # macOS
+Thumbs.db  # Windows

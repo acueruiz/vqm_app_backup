@@ -49,24 +49,24 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# 🏠 **Encabezado principal**
+# encabezado principal
 st.markdown('<div class="header">📋 Análisis de VQM MDM</div>', unsafe_allow_html=True)
 
-# 🔄 **Cargar datos desde la API**
+# cargar datos desde la API
 with st.spinner("Cargando datos de VQM MDM..."):
     time.sleep(1)  # Simulación de carga
     
-    # Datos de VQM MDM
+    # datos de VQM MDM
     response_vqm = requests.get(f"{API_URL}/vqm_mdm")
     df_vqm = pd.DataFrame(response_vqm.json()) if response_vqm.status_code == 200 else pd.DataFrame()
 
-# 📋 **Análisis de VQM MDM**
+# análisis de VQM MDM
 st.subheader("📋 Estado de las VQM MDM Registradas")
 
 if not df_vqm.empty:
     df_vqm["fecha"] = pd.to_datetime(df_vqm["fecha"], errors='coerce')
 
-    # 📊 **Indicadores Clave**
+    # indicadores clave
     col1, col2, col3 = st.columns(3)
 
     with col1:
