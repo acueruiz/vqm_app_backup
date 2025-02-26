@@ -1,14 +1,16 @@
 from flask import Blueprint, request, jsonify
 from .models import db, Usuario, CorreoUsuario, PermisoUsuario, VqmTemperatura, TratamientoNCVqm, DatosMdms, VqmMdm, VqmTemperaturaMI10
 
+# creamos la Blueprint llamada "vqm" que agrupará todas las rutas de la API (__init__.py)
+# para integrarse con la aplicación Flask
 api_blueprint = Blueprint('vqm', __name__)
 
-# ruta de prueba
+# ruta de prueba, para ver si la app está activa
 @api_blueprint.route('/ping', methods=['GET'])
 def ping():
     return jsonify({"message": "API funcionando correctamente"}), 200
 
-# rutas genéricas para obtener, insertar, actualizar y eliminar registros
+# rutas genéricas y dinámicas para obtener, insertar, actualizar y eliminar registros
 MODELOS = {
     "usuarios": Usuario,
     "correos_usuarios": CorreoUsuario,
