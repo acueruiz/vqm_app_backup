@@ -11,11 +11,6 @@ API_URL = "http://127.0.0.1:5000/vqm"
 # Configuración de la página
 st.set_page_config(page_title="Aplicación VQM", layout="wide")
 
-import base64
-
-# Ruta de la imagen
-LOGO_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "imagenes", "logo_michelin.png"))
-
 # estilos CSS personalizados
 st.markdown(
     """
@@ -87,15 +82,15 @@ if not df_vqm.empty:
         no_conformes = total_vqm - conformes
         st.metric(label="⚠️ VQM Báscula No Conformes", value=no_conformes)
 
-    # 📈 **Gráfico de conformidad**
+    # gráfico de conformidad
     fig_conformidad = px.pie(df_vqm, names="vqm_bascula_conforme", title="📊 Porcentaje de Conformidad")
     st.plotly_chart(fig_conformidad, use_container_width=True)
 
-    # 📉 **Gráfico de distribución de errores**
+    # gráfico de distribución de errores
     fig_errores = px.histogram(df_vqm, x=["error_cantidad1", "error_cantidad2"], title="📉 Distribución de Errores")
     st.plotly_chart(fig_errores, use_container_width=True)
 
-    # 📊 **Filtrado por operador**
+    # filtrado por operador
     operadores = df_vqm["operador"].unique()
     selected_operador = st.selectbox("👨‍🔧 Selecciona un Operador:", options=operadores)
 
@@ -103,7 +98,7 @@ if not df_vqm.empty:
     st.write(f"🔎 Mostrando datos para **{selected_operador}**")
     st.dataframe(df_filtrado)
 
-    # 🚨 **Alertas de errores altos**
+    # alertas de errores altos
     max_error = df_vqm[["error_cantidad1", "error_cantidad2"]].max().max()
     if max_error > 10:
         st.warning(f"⚠️ Se han detectado errores superiores a 10 kg en algunas mediciones.")
@@ -112,7 +107,7 @@ else:
 
 st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
 
-# 🚨 **Notificación en tiempo real sobre No Conformidades**
+# notificación en tiempo real sobre No Conformidades
 st.subheader("🚨 Estado de No Conformidades")
 response_nc = requests.get(f"{API_URL}/nc_abiertas")
 if response_nc.status_code == 200:
@@ -126,7 +121,7 @@ if response_nc.status_code == 200:
 
 st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
 
-# 📩 **Acciones rápidas**
+# acciones rápidas
 st.subheader("📩 Acciones Rápidas")
 
 col1, col2 = st.columns(2)
@@ -138,15 +133,3 @@ with col1:
 with col2:
     if st.button("Actualizar Datos"):
         st.experimental_rerun()
-
-# 🏁 **Pie de página**
-st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
-st.markdown(
-    """
-    <div style="text-align: center; margin-top: 30px;">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Michelin_logo.svg/2560px-Michelin_logo.svg.png" 
-        width="120">
-    </div>
-    """,
-    unsafe_allow_html=True
-)
