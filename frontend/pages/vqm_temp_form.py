@@ -1,12 +1,21 @@
 import streamlit as st
 import pandas as pd
 import requests
-import numpy as np
+import os
 
 # Configuración de la API Flask
 API_URL = "http://127.0.0.1:5000/vqm"
 
 st.set_page_config(page_title="Calcular VQM Temperatura", layout="wide")
+
+# Ruta correcta a la imagen dentro del proyecto
+LOGO_PATH = os.path.join("imagenes", "logo_michelin.png")
+
+# Verificar si la imagen existe antes de mostrarla
+if os.path.exists(LOGO_PATH):
+    st.image(LOGO_PATH, width=150)
+else:
+    st.error(f"No se encontró la imagen en {LOGO_PATH}")
 
 st.markdown('<div class="header">📊 CALCULAR VQM TEMPERATURA</div>', unsafe_allow_html=True)
 

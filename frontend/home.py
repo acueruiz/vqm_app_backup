@@ -1,4 +1,5 @@
 import streamlit as st
+import os
 import requests
 import pandas as pd
 import time
@@ -10,7 +11,12 @@ API_URL = "http://127.0.0.1:5000/vqm"
 # Configuración de la página
 st.set_page_config(page_title="Aplicación VQM", layout="wide")
 
-# 🎨 Estilos CSS personalizados
+import base64
+
+# Ruta de la imagen
+LOGO_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "imagenes", "logo_michelin.png"))
+
+# estilos CSS personalizados
 st.markdown(
     """
     <style>
