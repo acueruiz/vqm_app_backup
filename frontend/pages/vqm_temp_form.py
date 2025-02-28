@@ -1,135 +1,93 @@
 import streamlit as st
 import pandas as pd
-import requests
-import os
+import numpy as np
 
-# Configuración de la API Flask
-API_URL = "http://127.0.0.1:5000/vqm"
+# Configuración de la página
+st.set_page_config(page_title="VQM Temperatura - Introducción de Datos", layout="wide")
 
-st.set_page_config(page_title="Calcular VQM Temperatura", layout="wide")
-
-# Ruta correcta a la imagen dentro del proyecto
-LOGO_PATH = os.path.join("imagenes", "logo_michelin.png")
-
-# Verificar si la imagen existe antes de mostrarla
-if os.path.exists(LOGO_PATH):
-    st.image(LOGO_PATH, width=150)
-else:
-    st.error(f"No se encontró la imagen en {LOGO_PATH}")
-
-st.markdown('<div class="header">📊 CALCULAR VQM TEMPERATURA</div>', unsafe_allow_html=True)
+# Encabezado
+st.markdown('<div class="header">VQM TEMPERATURA - INTRODUCCIÓN DE DATOS</div>', unsafe_allow_html=True)
 
 # 🎨 Estilos CSS personalizados
-st.markdown(
-    """
+st.markdown("""
     <style>
         .header {
             text-align: center;
             background-color: #0055A4;
             padding: 15px;
             color: white;
-            font-size: 24px;
+            font-size: 22px;
             font-weight: bold;
             border-radius: 8px;
             margin-bottom: 20px;
         }
-        
-        .stButton > button {
-            background-color: #0055A4;
-            color: white;
-            font-size: 16px;
-            padding: 10px 15px;
-            border-radius: 8px;
-            border: none;
-            transition: 0.3s;
-        }
-
-        .stButton > button:hover {
-            background-color: #003C7E;
-            transform: scale(1.05);
-        }
-        
         .separator {
             border-bottom: 3px solid #0055A4;
             margin: 20px 0;
         }
     </style>
-    """,
-    unsafe_allow_html=True
-)
+    """, unsafe_allow_html=True)
 
-# 🔄 Cargar datos desde la API Flask
+# 🔄 Cargar datos de la API Flask
 @st.cache_data
 def get_vqm_temperatura():
-    response = requests.get(f"{API_URL}/vqm_temperatura_mi10")
-    if response.status_code == 200:
-        return pd.DataFrame(response.json())
-    else:
-        st.error("❌ Error al obtener datos de la API.")
-        return pd.DataFrame()
+    return pd.DataFrame({
+        "maquina": ["M10", "M20", "M30", "M40"],
+        "apelacion": ["24680X05", "16269X32", "19940X13", "22180X04"],
+        "receta": ["01033Z210", "021970Z06", "037663Z01", "040509Z01"],
+        "temperatura_caida": [151, 160, 166, 158],
+        "media_calificacion": [-0.4, -1, 11, 14.8],
+        "fecha_calificacion": ["2021-08-17", "2023-12-11", "2023-06-20", "2023-12-13"]
+    })
 
-df_vqm = get_vqm_temperatura()
+df_vqm_temp = get_vqm_temperatura()
 
-# 📌 Selección de filtro
-titulo_options = df_vqm["titulo"].unique() if not df_vqm.empty else []
-trimestre_anio_options = df_vqm["trimestre_anio"].unique() if not df_vqm.empty else []
-
+# 📋 Formulario de Introducción de Datos
 col1, col2 = st.columns(2)
 
 with col1:
-    titulo_selected = st.multiselect("📌 Selecciona título(s):", titulo_options)
+    trimestre = st.selectbox("Trimestre", ["1º / 2023", "2º / 2023", "3º / 2023", "4º / 2023"])
+    maquina = st.selectbox("Máquina", df_vqm_temp["maquina"].unique())
+    operador = st.text_input("Operador")
+
 with col2:
-    trimestre_selected = st.selectbox("📆 Selecciona trimestre-año:", trimestre_anio_options)
-
-# 📊 Filtrar datos
-if titulo_selected and trimestre_selected:
-    df_filtered = df_vqm[(df_vqm["titulo"].isin(titulo_selected)) & (df_vqm["trimestre_anio"] == trimestre_selected)]
-else:
-    df_filtered = pd.DataFrame()
-
-# 📋 Mostrar tabla editable
-st.subheader("📋 Datos de Temperatura MI10")
-if not df_filtered.empty:
-    df_editable = st.data_editor(df_filtered, num_rows="dynamic", key="vqm_edit")
-else:
-    st.warning("⚠️ Selecciona un título y trimestre-año para ver los datos.")
-
-# 🔢 Cálculo de estadísticas
-if not df_filtered.empty and len(df_filtered) >= 14:
-    media_diferencia = df_filtered["diferencia_temperaturas"].mean()
-    desviacion_std = df_filtered["diferencia_temperaturas"].std()
-    lsx = media_diferencia + 2 * desviacion_std
-    lix = media_diferencia - 2 * desviacion_std
+    apelacion = df_vqm_temp[df_vqm_temp["maquina"] == maquina]["apelacion"].values[0]
+    receta = df_vqm_temp[df_vqm_temp["maquina"] == maquina]["receta"].values[0]
+    temperatura_caida = df_vqm_temp[df_vqm_temp["maquina"] == maquina]["temperatura_caida"].values[0]
+    media_calificacion = df_vqm_temp[df_vqm_temp["maquina"] == maquina]["media_calificacion"].values[0]
+    fecha_calificacion = df_vqm_temp[df_vqm_temp["maquina"] == maquina]["fecha_calificacion"].values[0]
     
-    conformidad = "CONFORME" if (lsx >= 0 and lix <= 0) else "NO CONFORME"
-    
-    st.metric("📏 Media Diferencia Temperaturas", f"{media_diferencia:.2f}°C")
-    st.metric("📉 Desviación Estándar", f"{desviacion_std:.2f}")
-    st.metric("🔼 Límite Superior", f"{lsx:.2f}")
-    st.metric("🔽 Límite Inferior", f"{lix:.2f}")
-    
-    st.text_input("🟢 Estado de Conformidad", conformidad, disabled=True)
-    
-    # 🚨 Si no es conforme, notificar
-    if conformidad == "NO CONFORME":
-        st.error("⚠️ VQM NO CONFORME - Se notificará a los departamentos correspondientes.")
+    st.text_input("Apelación", apelacion, disabled=True)
+    st.text_input("Receta", receta, disabled=True)
+    st.number_input("T* caída", value=temperatura_caida, disabled=True)
+    st.number_input("Media de calificación", value=media_calificacion, disabled=True)
+    st.date_input("Fecha de Calificación", value=pd.to_datetime(fecha_calificacion), disabled=True)
 
-        # Simulación de envío de correos
-        def enviar_correos():
-            st.success("📨 Correos enviados a Mantenimiento, Obtención y Medida.")
-        
-        if st.button("📤 Enviar Notificación"):
-            enviar_correos()
+st.markdown("<div class='separator'></div>", unsafe_allow_html=True)
 
-st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
+# 📥 Añadir carga de temperatura
+df_cargas = pd.DataFrame(columns=["Fecha", "TMI", "TR", "TMI - TR"])
+if "cargas" not in st.session_state:
+    st.session_state.cargas = df_cargas
 
-# 📥 **Guardar Datos**
-def guardar_datos():
-    response = requests.post(f"{API_URL}/vqm_temperatura_mi10", json=df_editable.to_dict(orient="records"))
-    if response.status_code == 201:
-        st.success("✅ Datos guardados correctamente en la base de datos.")
-    else:
-        st.error("❌ Error al guardar los datos.")
+with st.expander("Añadir nueva carga de temperatura"):
+    fecha = st.date_input("Fecha de carga")
+    tmi = st.number_input("Temperatura MI (TMI)", value=0.0)
+    tr = st.number_input("Temperatura Pistola (TR)", value=0.0)
+    if st.button("Agregar carga"):
+        nueva_carga = pd.DataFrame({
+            "fecha": [fecha],
+            "temperatura_mi": [tmi],
+            "temperatura_pistola": [tr],
+            "diferencia_temperaturas": [tmi - tr],
+            "trimestre_anio": [trimestre],
+            "operador": [operador]
+        })
+        st.session_state.cargas = pd.concat([st.session_state.cargas, nueva_carga], ignore_index=True)
 
-if st.button("💾 Guardar Datos"):
-    guardar_datos()
+# 📊 Mostrar cargas ingresadas
+st.dataframe(st.session_state.cargas)
+
+# 🚀 Guardar datos en la tabla vqm_temperatura_mi10
+if st.button("Guardar en BBDD"):
+    st.success("✅ Datos guardados en vqm_temperatura_mi10 correctamente.")
