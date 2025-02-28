@@ -136,10 +136,10 @@ with col3:
     st.text_input("VQM Báscula Conforme", value=vqm_bascula_conforme, disabled=True)
 
 with col4:
-    verif1_valor_maxico = st.text_input("Verif1 - Valor máxico (kg)")
-    verif1_valor_bascula = st.text_input("Verif1 - Valor báscula (kg)")
-    verif2_valor_maxico = st.text_input("Verif2 - Valor máxico (kg)")
-    verif2_valor_bascula = st.text_input("Verif2 - Valor báscula (kg)")
+    verif1_valor_maxico = st.text_input("Cantidad 1 - Valor másico (kg)")
+    verif1_valor_bascula = st.text_input("Cantidad 1 - Valor báscula (kg)")
+    verif2_valor_maxico = st.text_input("Cantidad 2 - Valor másico (kg)")
+    verif2_valor_bascula = st.text_input("Cantidad 2 - Valor báscula (kg)")
 
 # convertir todos los valores
 peso_patron = convertir_a_float(mdm_details.get("vr_masas_patron", 0.0))
