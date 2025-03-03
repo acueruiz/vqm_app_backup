@@ -40,16 +40,25 @@ def get_by_id(modelo, id):
         return jsonify({"error": "Registro no encontrado"}), 404
     return jsonify({"error": "Modelo no encontrado"}), 404
 
-# insertar un nuevo registro en la base de datos
+# insertar uno o varios registros en la base de datos
 @api_blueprint.route('/vqm/<string:modelo>', methods=['POST'])
 def create_record(modelo):
     if modelo in MODELOS:
         data = request.json
-        nuevo_registro = MODELOS[modelo](**data)
-        db.session.add(nuevo_registro)
+        
+        # manejo de múltiples registros
+        if isinstance(data, list):  # si recibe una lista de registros
+            nuevos_registros = [MODELOS[modelo](**registro) for registro in data]
+            db.session.add_all(nuevos_registros)
+        else:  # si solo recibe un único registro
+            nuevo_registro = MODELOS[modelo](**data)
+            db.session.add(nuevo_registro)
+
         db.session.commit()
-        return jsonify({"message": f"Registro agregado en {modelo}"}), 201
+        return jsonify({"message": f"Registro(s) agregado(s) en {modelo}"}), 201
+    
     return jsonify({"error": "Modelo no encontrado"}), 404
+
 
 # actualizar un registro existente
 @api_blueprint.route('/vqm/<string:modelo>/<int:id>', methods=['PUT'])

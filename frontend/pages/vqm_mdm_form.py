@@ -79,11 +79,13 @@ col1, col2, col3 = st.columns(3)
 
 with col1:
     circuito = st.text_input("Circuito", mdm_details.get("circuito", ""), disabled=True)
-    bascula = st.text_input("Báscula", mdm_details.get("bascula", ""), disabled=True)
+    operador = st.text_input("Operador", "")
 
 with col2:
+    bascula = st.text_input("Báscula", mdm_details.get("bascula", ""), disabled=True)
+
+with col3:
     fecha = st.date_input("Fecha")
-    operador = st.text_input("Operador", "")
 
 st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
 
@@ -115,6 +117,29 @@ def verificar_conformidad_bascula(valor_bascula, valor_cero, tolerancia_cero, to
     
     return "CONFORME"
 
+def mostrar_conformidad(mensaje):
+    color = "#BDBDBD"  # Gris por defecto (Datos incompletos)
+
+    if mensaje == "CONFORME":
+        color = "#4CAF50"  # Verde
+    elif mensaje == "NO CONFORME":
+        color = "#FF4B4B"  # Rojo
+
+    st.markdown(f"""
+        <div style="
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            color: white;
+            background-color: {color};
+            font-size: 18px;
+            margin-top: 10px;
+        ">
+            {mensaje}
+        </div>
+    """, unsafe_allow_html=True)
+
 col1, col2, col3, col4 = st.columns(4, gap="medium")
 
 with col1:
@@ -133,7 +158,8 @@ with col3:
     # calcular y mostrar "VQM Báscula Conforme"
     vqm_bascula_conforme = verificar_conformidad_bascula(valor_vqm_bascula, valor_cero_bascula, tolerancia_cero, tolerancia_vr, peso_patron)
 
-    st.text_input("VQM Báscula Conforme", value=vqm_bascula_conforme, disabled=True)
+    st.text("VQM Báscula Conforme:")
+    mostrar_conformidad(vqm_bascula_conforme)
 
 with col4:
     verif1_valor_maxico = st.text_input("Cantidad 1 - Valor másico (kg)")
@@ -183,7 +209,8 @@ with col1:
     st.number_input("Error cantidad 2 (g)", value=error_cantidad_2 or 0, disabled=True)
 
 with col2:
-    st.text_input("VQM Másico Conforme", value=vqm_masico_conforme, disabled=True)
+    st.text("VQM Másico Conforme:")
+    mostrar_conformidad(vqm_masico_conforme)
 
 st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
 
