@@ -1,14 +1,17 @@
 import streamlit as st
-import pandas as pd
 import requests
+import pandas as pd
 
-# 📡 Configuración de la API Flask
+# Configuración de la API Flask
 API_URL = "http://127.0.0.1:5000/vqm"
 
-# 🖥 Configuración de la página
-st.set_page_config(page_title="VQM - Registros", layout="wide")
+# Configuración de la página
+st.set_page_config(page_title="VQM MDM - Datos", layout="wide")
 
-# 🎨 Estilos CSS personalizados
+# encabezado
+st.markdown('<div class="header">VQM MDM - VISUALIZACIÓN DE DATOS</div>', unsafe_allow_html=True)
+
+# estilos CSS personalizados
 st.markdown("""
     <style>
         .header {
@@ -21,19 +24,6 @@ st.markdown("""
             border-radius: 8px;
             margin-bottom: 20px;
         }
-        .stButton > button {
-            background-color: #0055A4;
-            color: white;
-            font-size: 16px;
-            padding: 10px 15px;
-            border-radius: 8px;
-            border: none;
-            transition: 0.3s;
-        }
-        .stButton > button:hover {
-            background-color: #003C7E;
-            transform: scale(1.05);
-        }
         .separator {
             border-bottom: 3px solid #0055A4;
             margin: 20px 0;
@@ -41,69 +31,80 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# 🏷 Encabezado principal
-st.markdown('<div class="header">📋 VQM - REGISTROS HISTÓRICOS</div>', unsafe_allow_html=True)
-
-# 🔄 Cargar datos desde la API Flask
+# Cargar datos de la API Flask
 @st.cache_data
-def get_vqm_data():
+def get_mdm_data():
     response = requests.get(f"{API_URL}/vqm_mdm")
     if response.status_code == 200:
-        return pd.DataFrame(response.json())
+        df = pd.DataFrame(response.json())
+
+        # Verificar que la columna 'fecha' existe y convertirla a datetime
+        if "fecha" in df.columns:
+            df["fecha"] = pd.to_datetime(df["fecha"], errors='coerce')
+
+        return df
     else:
-        st.error("❌ Error al obtener datos de la API.")
+        st.error("❌ Error al obtener detalles de MDMs.")
         return pd.DataFrame()
 
-df = get_vqm_data()
+df_mdm = get_mdm_data()
 
-# 📊 Mostrar los datos si existen
-if not df.empty:
-    # Convertir fechas a formato adecuado
-    df["fecha"] = pd.to_datetime(df["fecha"], errors='coerce')
+# Verifica que el DataFrame no esté vacío antes de continuar
+if df_mdm.empty:
+    st.warning("No hay datos disponibles.")
+    st.stop()
 
-    # 📌 **Barra de búsqueda**
-    search_query = st.text_input("🔍 Buscar por Operador, MDM o Estado de Conformidad:")
+# Filtros de búsqueda
+col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
+
+with col1:
+    mdm_selected = st.selectbox("MDM", ["Todos"] + list(df_mdm["titulo"].unique()))
+
+with col2:
+    fecha_inicio = st.date_input("Desde fecha:")
+
+with col3:
+    fecha_fin = st.date_input("Hasta fecha:")
+
+with col4:
+    if st.button("🔍 Buscar"):
+        st.session_state.filtrar = True
+
+# Filtrar datos según selección
+if "filtrar" in st.session_state and st.session_state.filtrar:
+    if mdm_selected != "Todos":
+        df_mdm = df_mdm[df_mdm["titulo"] == mdm_selected]
+
+    if "fecha" in df_mdm.columns:
+        df_mdm = df_mdm[(df_mdm["fecha"] >= pd.to_datetime(fecha_inicio)) & 
+                        (df_mdm["fecha"] <= pd.to_datetime(fecha_fin))]
+
+# Mostrar tabla con funcionalidades adicionales
+if not df_mdm.empty:
+    df_mdm = df_mdm.sort_values(by="fecha", ascending=False)
+    df_mdm = df_mdm.reset_index(drop=True)
     
-    # 📌 **Filtros dinámicos**
-    col1, col2, col3 = st.columns(3)
+    def highlight_non_conform(val):
+        if val is False:  # Corrigiendo el formato de "NO CONFORME" en booleanos
+            return 'background-color: #FF4B4B; color: white; font-weight: bold;'
+        return ''
 
-    with col1:
-        mdm_list = ["Todos"] + list(df["titulo"].unique())
-        selected_mdm = st.selectbox("🏷️ Filtrar por MDM:", mdm_list)
-
-    with col2:
-        operador_list = ["Todos"] + list(df["operador"].unique())
-        selected_operador = st.selectbox("👷 Filtrar por Operador:", operador_list)
-
-    with col3:
-        fecha_range = st.date_input("📅 Filtrar por Fecha:", [])
-
-    # 🔍 **Aplicar filtros**
-    df_filtered = df.copy()
-
-    if search_query:
-        df_filtered = df_filtered[df_filtered.apply(lambda row: search_query.lower() in str(row).lower(), axis=1)]
-
-    if selected_mdm != "Todos":
-        df_filtered = df_filtered[df_filtered["titulo"] == selected_mdm]
-
-    if selected_operador != "Todos":
-        df_filtered = df_filtered[df_filtered["operador"] == selected_operador]
-
-    if fecha_range:
-        df_filtered = df_filtered[(df_filtered["fecha"] >= pd.to_datetime(fecha_range[0])) & 
-                                  (df_filtered["fecha"] <= pd.to_datetime(fecha_range[1]))]
-
-    # 📌 **Mostrar tabla dinámica**
-    st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
-    st.subheader("📊 Registros Filtrados")
-    st.dataframe(df_filtered)
+    # Mostrar en Streamlit con los valores correctos
+    st.dataframe(df_mdm.style.applymap(highlight_non_conform, 
+                subset=["vqm_bascula_conforme", "vqm_masico_conforme"]))
 
 else:
-    st.warning("📭 No hay datos disponibles.")
+    st.warning("No se encontraron datos para los filtros seleccionados.")
 
-# 🔄 **Botón para actualizar datos**
-st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
-if st.button("🔄 Actualizar Datos"):
-    st.cache_data.clear()
-    st.experimental_rerun()
+# Botones adicionales
+col1, col2 = st.columns([1, 1])
+
+with col1:
+    if st.button("📥 Exportar a CSV"):
+        df_mdm.to_csv("datos_vqm.csv", index=False)
+        st.success("Archivo CSV generado correctamente.")
+
+with col2:
+    if st.button("📥 Exportar a Excel"):
+        df_mdm.to_excel("datos_vqm.xlsx", index=False)
+        st.success("Archivo Excel generado correctamente.")
