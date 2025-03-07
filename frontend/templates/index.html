@@ -1,12 +1,57 @@
-{% extends "base.html" %}
-
-{% block title %}VQM - Datos{% endblock %}
+{% extends 'base.html' %}
 
 {% block content %}
-<div class="container">
-    <h2 class="my-4">VQM - Datos</h2>
-    
-    <table id="vqmTable" class="table table-striped">
+<div class="container mt-4">
+    <h2 class="text-center">📋 Análisis de VQM MDM</h2>
+    <hr>
+
+    <!-- Sección de métricas -->
+    <div class="row text-center">
+        <div class="col-md-4">
+            <div class="card text-white bg-primary mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">📏 Total de VQM Registradas</h5>
+                    <h3>{{ total_vqm }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">✅ VQM Báscula Conformes</h5>
+                    <h3>{{ conformes }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-danger mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">⚠️ No Conformes</h5>
+                    <h3>{{ no_conformes }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección de gráficos -->
+    <div class="row">
+        <div class="col-md-6">
+            <canvas id="chartConformidad"></canvas>
+        </div>
+        <div class="col-md-6">
+            <canvas id="chartErrores"></canvas>
+        </div>
+    </div>
+
+    <!-- Tabla de datos -->
+    <h3 class="mt-4">🔎 Filtrar por Operador</h3>
+    <select id="filterOperador" class="form-control mb-3">
+        <option value="Todos">Todos</option>
+        {% for operador in operadores %}
+        <option value="{{ operador }}">{{ operador }}</option>
+        {% endfor %}
+    </select>
+    <table class="table table-striped" id="dataTable">
         <thead>
             <tr>
                 <th>ID</th>
@@ -17,23 +62,45 @@
             </tr>
         </thead>
         <tbody>
-            {% for dato in datos %}
+            {% for row in datos %}
             <tr>
-                <td>{{ dato.id }}</td>
-                <td>{{ dato.titulo }}</td>
-                <td>{{ dato.fecha }}</td>
-                <td>{{ dato.operador }}</td>
-                <td>{{ "✔ Conforme" if dato.vqm_masico_conforme else "❌ No Conforme" }}</td>
+                <td>{{ row.id }}</td>
+                <td>{{ row.titulo }}</td>
+                <td>{{ row.fecha }}</td>
+                <td>{{ row.operador }}</td>
+                <td>{% if row.vqm_bascula_conforme %}✅ Conforme{% else %}⚠️ No Conforme{% endif %}</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
 
-<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<!-- Scripts para Chart.js y Filtros -->
 <script>
-    $(document).ready(function() {
-        $('#vqmTable').DataTable();
+    const ctx1 = document.getElementById('chartConformidad').getContext('2d');
+    const ctx2 = document.getElementById('chartErrores').getContext('2d');
+    
+    new Chart(ctx1, {
+        type: 'pie',
+        data: {
+            labels: ['Conformes', 'No Conformes'],
+            datasets: [{
+                data: [{ conformes }, { no_conformes }],
+                backgroundColor: ['#28a745', '#dc3545']
+            }]
+        }
+    });
+    
+    new Chart(ctx2, {
+        type: 'bar',
+        data: {
+            labels: ['Error Cantidad 1', 'Error Cantidad 2'],
+            datasets: [{
+                label: 'Errores',
+                data: [{ max_error1 }, { max_error2 }],
+                backgroundColor: '#007bff'
+            }]
+        }
     });
 </script>
 {% endblock %}

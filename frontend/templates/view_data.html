@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}VQM - Datos{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="my-4">VQM - Datos</h2>
+    
+    <table id="vqmTable" class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Título</th>
+                <th>Fecha</th>
+                <th>Operador</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for dato in datos %}
+            <tr>
+                <td>{{ dato.id }}</td>
+                <td>{{ dato.titulo }}</td>
+                <td>{{ dato.fecha }}</td>
+                <td>{{ dato.operador }}</td>
+                <td>{{ "✔ Conforme" if dato.vqm_masico_conforme else "❌ No Conforme" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#vqmTable').DataTable();
+    });
+</script>
+{% endblock %}
