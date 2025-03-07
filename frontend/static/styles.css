@@ -1,0 +1,16 @@
+body {
+    background-color: #f8f9fa;
+}
+
+.navbar {
+    background-color: #0055A4;
+}
+
+.navbar-brand {
+    color: white !important;
+    font-weight: bold;
+}
+
+.container {
+    margin-top: 20px;
+}
