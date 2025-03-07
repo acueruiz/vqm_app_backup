@@ -2,12 +2,12 @@ from flask import Blueprint, render_template
 import requests
 
 # Crear Blueprint para las rutas del frontend
-frontend_bp = Blueprint('frontend', __name__)
+frontend_bp = Blueprint('frontend', __name__, template_folder='templates')
 
 @frontend_bp.route('/')
 def home():
     # Usar la ruta correcta para obtener los datos
-    response = requests.get('http://127.0.0.1:5000/vqm/vqm_mdm')
+    response = requests.get('http://127.0.0.1:5000/vqm/vqm_mdm')  # 👈 Corrige si el endpoint es /api/vqm/vqm_mdm
     
     if response.status_code == 200:
         datos = response.json()

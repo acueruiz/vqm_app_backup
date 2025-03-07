@@ -23,7 +23,7 @@ MODELOS = {
 }
 
 # obtener todos los registros de cualquier tabla
-@api_blueprint.route('/vqm/<string:modelo>', methods=['GET'])
+@api_blueprint.route('/<string:modelo>', methods=['GET'])
 def get_all(modelo):
     if modelo in MODELOS:
         registros = MODELOS[modelo].query.all()
@@ -31,7 +31,7 @@ def get_all(modelo):
     return jsonify({"error": "Modelo no encontrado"}), 404
 
 # obtener un registro específico por ID
-@api_blueprint.route('/vqm/<string:modelo>/<int:id>', methods=['GET'])
+@api_blueprint.route('/<string:modelo>/<int:id>', methods=['GET'])
 def get_by_id(modelo, id):
     if modelo in MODELOS:
         registro = MODELOS[modelo].query.get(id)
@@ -41,7 +41,7 @@ def get_by_id(modelo, id):
     return jsonify({"error": "Modelo no encontrado"}), 404
 
 # insertar uno o varios registros en la base de datos
-@api_blueprint.route('/vqm/<string:modelo>', methods=['POST'])
+@api_blueprint.route('/<string:modelo>', methods=['POST'])
 def create_record(modelo):
     if modelo in MODELOS:
         data = request.json
@@ -61,7 +61,7 @@ def create_record(modelo):
 
 
 # actualizar un registro existente
-@api_blueprint.route('/vqm/<string:modelo>/<int:id>', methods=['PUT'])
+@api_blueprint.route('/<string:modelo>/<int:id>', methods=['PUT'])
 def update_record(modelo, id):
     if modelo in MODELOS:
         registro = MODELOS[modelo].query.get(id)
@@ -77,7 +77,7 @@ def update_record(modelo, id):
     return jsonify({"error": "Modelo no encontrado"}), 404
 
 # eliminar un registro por ID
-@api_blueprint.route('/vqm/<string:modelo>/<int:id>', methods=['DELETE'])
+@api_blueprint.route('/<string:modelo>/<int:id>', methods=['DELETE'])
 def delete_record(modelo, id):
     if modelo in MODELOS:
         registro = MODELOS[modelo].query.get(id)
