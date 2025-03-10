@@ -14,7 +14,22 @@ def home():
     else:
         datos = []
 
-    return render_template('index.html', datos=datos)
+    total_vqm = len(datos)
+    conformes = sum(1 for d in datos if d.get('vqm_bascula_conforme'))
+    no_conformes = total_vqm - conformes
+
+    # Obtener operadores únicos
+    operadores = list(set(d.get('operador', 'Desconocido') for d in datos))
+
+    # Calcular errores
+    max_error1 = max([d.get("error_cantidad1", 0) if d.get("error_cantidad1") is not None else 0 for d in datos], default=0)
+    max_error2 = max([d.get("error_cantidad2", 0) if d.get("error_cantidad2") is not None else 0 for d in datos], default=0)
+
+
+    return render_template('index.html', datos=datos, total_vqm=total_vqm,
+                           conformes=conformes, no_conformes=no_conformes,
+                           operadores=operadores, max_error1=max_error1,
+                           max_error2=max_error2)
 
 @frontend_bp.route('/vqm_mdm')
 def vqm_mdm():
