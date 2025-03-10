@@ -1,12 +1,136 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formulario VQM</title>
-</head>
-<body>
-    <h1>Formulario VQM MDM</h1>
-    <p>Este es un formulario de prueba.</p>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}VQM MDM - Introducción de Datos{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mt-3 text-center">📋 VQM MDM - Introducción de Datos</h2>
+
+    <!-- Selección de MDM -->
+    <div class="mb-3">
+        <label for="mdmSelect" class="form-label">Seleccionar MDM:</label>
+        <select id="mdmSelect" class="form-select">
+            <option value="" selected>-- Selecciona un MDM --</option>
+        </select>
+    </div>
+
+    <!-- Formulario de datos -->
+    <div class="row">
+        <div class="col-md-4">
+            <label class="form-label">Circuito</label>
+            <input type="text" id="circuito" class="form-control" disabled>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Operador</label>
+            <input type="text" id="operador" class="form-control">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Fecha</label>
+            <input type="date" id="fecha" class="form-control">
+        </div>
+    </div>
+
+    <hr>
+
+    <!-- Datos de báscula -->
+    <h4 class="mt-3">📏 Datos de Báscula</h4>
+    <div class="row">
+        <div class="col-md-3">
+            <label class="form-label">Peso Patrón (kg)</label>
+            <input type="text" id="peso_patron" class="form-control" disabled>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Valor Báscula</label>
+            <input type="text" id="valor_bascula" class="form-control">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Valor Cero Báscula</label>
+            <input type="text" id="valor_cero_bascula" class="form-control">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Conformidad</label>
+            <div id="conformidad_bascula" class="form-control text-center fw-bold">-</div>
+        </div>
+    </div>
+
+    <hr>
+
+    <!-- Datos de verificación -->
+    <h4 class="mt-3">📊 Verificación de Cantidades</h4>
+    <div class="row">
+        <div class="col-md-3">
+            <label class="form-label">Cantidad 1 - Valor Másico (kg)</label>
+            <input type="text" id="verif1_masico" class="form-control">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Cantidad 1 - Valor Báscula (kg)</label>
+            <input type="text" id="verif1_bascula" class="form-control">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Cantidad 2 - Valor Másico (kg)</label>
+            <input type="text" id="verif2_masico" class="form-control">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Cantidad 2 - Valor Báscula (kg)</label>
+            <input type="text" id="verif2_bascula" class="form-control">
+        </div>
+    </div>
+
+    <hr>
+
+    <!-- Botón de envío -->
+    <div class="text-center mt-4">
+        <button class="btn btn-primary" onclick="guardarDatos()">📥 Guardar Datos</button>
+    </div>
+</div>
+
+<script>
+    // Cargar lista de MDMs desde la API
+    document.addEventListener("DOMContentLoaded", function() {
+        fetch('/api/vqm/datos_mdms')
+            .then(response => response.json())
+            .then(data => {
+                let mdmSelect = document.getElementById("mdmSelect");
+                data.forEach(mdm => {
+                    let option = document.createElement("option");
+                    option.value = mdm.masico;
+                    option.text = mdm.masico;
+                    mdmSelect.appendChild(option);
+                });
+
+                // Agregar evento para actualizar datos cuando se seleccione un MDM
+                mdmSelect.addEventListener("change", function() {
+                    let selectedMdm = this.value;
+                    let mdmData = data.find(mdm => mdm.masico === selectedMdm);
+                    if (mdmData) {
+                        document.getElementById("circuito").value = mdmData.circuito || "";
+                        document.getElementById("peso_patron").value = mdmData.vr_masas_patron || "";
+                    }
+                });
+            });
+    });
+
+    function guardarDatos() {
+        let data = {
+            titulo: document.getElementById("mdmSelect").value,
+            fecha: document.getElementById("fecha").value,
+            operador: document.getElementById("operador").value,
+            valor_bascula: parseFloat(document.getElementById("valor_bascula").value) || 0,
+            valor_cero_bascula: parseFloat(document.getElementById("valor_cero_bascula").value) || 0,
+            cant1_verif1_valor_masico: parseFloat(document.getElementById("verif1_masico").value) || 0,
+            cant1_verif1_valor_bascula: parseFloat(document.getElementById("verif1_bascula").value) || 0,
+            cant2_verif1_valor_masico: parseFloat(document.getElementById("verif2_masico").value) || 0,
+            cant2_verif1_valor_bascula: parseFloat(document.getElementById("verif2_bascula").value) || 0
+        };
+
+        fetch('/vqm/vqm_mdm', {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(result => alert("✅ Datos guardados correctamente"))
+        .catch(error => alert("❌ Error al guardar los datos"));
+    }
+</script>
+{% endblock %}
